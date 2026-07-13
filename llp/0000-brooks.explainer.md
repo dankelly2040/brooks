@@ -9,7 +9,7 @@
 **Author:** Charlie Cheever / Codex
 **Date:** 2026-07-13
 **Revised:** 2026-07-13
-**Related:** LLP 0001, [ccheever/llp](https://github.com/ccheever/llp)
+**Related:** LLP 0001, LLP 0002, LLP 0003, LLP 0004, [ccheever/llp](https://github.com/ccheever/llp)
 
 ## Summary
 
@@ -164,22 +164,39 @@ task slug so parallel agents can contribute without editing a shared log.
 - [observed — LLP adoption guide v0.2.0] Keep this generated root document
   `Draft` until its inferred claims are confirmed, corrected, or removed.
 
+## Answered by research
+
+- [observed — LLP 0002] **Market/locale:** the canonical demo is the Brooks US
+  storefront, `Sites-BrooksRunning-Site`, `en_US`, USD.
+- [observed — LLP 0002] **Cart interoperability:** the prototype's cart cannot
+  interoperate with a website cart. Brooks is behind Akamai Bot Manager, which
+  403s every non-browser client, so the app cannot reach `Cart-AddProduct` at all.
+  The cart is therefore local, and builds the real Brooks variant id so the last
+  mile is documented rather than guessed.
+- [inferred — LLP 0002] **Asset and data constraints:** the catalog snapshot is a
+  prototype fixture, not a redistribution. Imagery is streamed live from Brooks's
+  own CDN rather than copied. A single, checkpointed harvest pass keeps request
+  volume negligible. None of this survives contact with a public release, and it
+  is not meant to.
+- [inferred — LLP 0002] **Code-sharing boundary:** `packages/catalog` is the source
+  of truth and is *copied* into each app by `tools/harvest run sync`. Metro and
+  Vite both resolve outside their project root only with extra configuration, and a
+  demo that fails to bundle on an unfamiliar machine is worth less than a
+  duplicated file.
+
 ## Open questions
 
-- Which Brooks market, locale, currency, and website environment define the
-  canonical demo experience?
 - Within the required website surfaces, which secondary features—search,
   filtering, recommendations, favorites, and account details—must ship in the
   first executive demo?
-- What attribution, asset-usage, caching, and data-retention constraints should
-  apply if the prototype moves beyond limited internal demonstration?
-- Does the cart need to interoperate with a cart created on the website, or only
-  behave correctly within the prototype?
 - What accessibility, responsiveness, performance, offline behavior, analytics,
   automated testing, and device coverage define “demo ready”?
-- How should Brooks consume Exact's moving `origin/main`: source checkout,
-  workspace dependency, generated artifact, or another integration boundary?
-- What repository structure and code-sharing boundary best serve the Expo and
-  Exact implementations?
+- [observed — LLP 0004] **How should Brooks consume Exact's `origin/main`?** Still
+  open, and now urgent: the local checkout at `~/projects/exact` is 67 commits
+  behind `origin/main` with ~80 uncommitted local changes. It was deliberately left
+  untouched. Whoever builds the Exact app must choose explicitly between that tree
+  and a fresh clone, and record the choice.
+- Does the catalog snapshot need re-harvesting on a schedule to stay truthful, or
+  is a dated snapshot honest enough if the app says when it was captured?
 - Who can confirm the remaining inferred claims and promote this root LLP from
   `Draft` to `Active`?
