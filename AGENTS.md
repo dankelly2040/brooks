@@ -32,7 +32,10 @@ Skills: orient = context before coding · create = author one LLP · review = LL
 ## Working on Brooks
 
 - Capture non-obvious design decisions while their rationale is fresh.
+- Read the AI-agent development diary requirements in LLP 0000. Record useful
+  implementation successes, blockers, unexpected difficulty, comparative
+  friction, and improvement ideas as part of substantial development work once
+  the diary format and location are established.
 - Keep generated rationale tagged as `[observed]`, `[confirmed]`, or
   `[inferred]`; do not promote inferred claims without human confirmation.
 - Land LLP updates in the same change as the implementation they explain.
-
