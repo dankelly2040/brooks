@@ -14,7 +14,7 @@ The repository will contain two apps:
 
 ## Current state (2026-07-13)
 
-Research is **done**. The apps are **not**.
+Research is **done**. Both apps are **built and verified**.
 
 | | State |
 |---|---|
@@ -22,10 +22,15 @@ Research is **done**. The apps are **not**.
 | Brooks API, sniffed and documented | ✅ Complete — [LLP 0002](./llp/0002-brooks-commerce-api.research.md) |
 | Real catalog captured | ✅ 226 products, 821 colorways — `packages/catalog/catalog.json` |
 | What Exact can do today | ✅ Complete — [LLP 0004](./llp/0004-building-on-exact.research.md) |
-| **Expo app** | 🟡 **Scaffold only.** Boots, real data, Home + Shop built. PLP, PDP, Shoe Finder, Cart, Login, Search are stubs. |
-| **Exact app** | ⬜ **Not started.** |
+| **Expo app** | ✅ **Complete.** Home, Shop, PLP, PDP, Cart, Shoe Finder, live Search, Run Club login/account. 16-step browser E2E: all pass, zero console errors — [diary](./diaries/2026-07-13-expo-screens.md). |
+| **Exact app** | ✅ **Complete** (web target, Contract). Home with live countdown, browse, search, PDP with variant selection, cart with real variant ids. 15-step agent-API E2E: all pass, zero console errors — [diary](./diaries/2026-07-13-exact-app.md). |
 
-![Expo home screen](./docs/expo-home.png)
+| Expo | |
+|---|---|
+| ![Expo home](./docs/expo-home.png) | ![Expo PDP](./docs/expo-pdp.png) |
+
+More screenshots: `docs/expo-*.png` (PLP, cart, finder, live search) and
+`docs/exact-*.png` (home, browse, detail, cart).
 
 ## The one thing to know about the data
 
@@ -56,6 +61,33 @@ npx expo start --web    # or run it in a browser
 
 It boots to the Project 222 home screen with a live countdown to Josh Kerr's mile
 world-record attempt on July 18, 2026, and real Brooks products throughout.
+Search is live against Brooks's own Constructor.io index; everything else works
+offline from the bundled snapshot.
+
+## Running the Exact app
+
+The Exact app follows `origin/main` of [ccheever/exact](https://github.com/ccheever/exact)
+via a fresh clone at `~/projects/exact-main` (see `apps/exact/exact.links.json`).
+One-time setup for that clone, if it doesn't exist yet:
+
+```sh
+git clone https://github.com/ccheever/exact ~/projects/exact-main
+cd ~/projects/exact-main
+git submodule update --init vendor/ibex
+bun install
+```
+
+Then:
+
+```sh
+cd apps/exact
+bun install
+bun --bun run dev       # web app on http://127.0.0.1:8083
+```
+
+The dev server is the deliverable — Contract has no production web-build story
+yet (LLP 0004). The agent surface lives at `http://127.0.0.1:8083/__exact/agent/`
+while the app is open in a browser tab.
 
 ## Re-harvesting the catalog
 

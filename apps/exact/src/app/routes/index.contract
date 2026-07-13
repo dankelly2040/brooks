@@ -1,0 +1,446 @@
+// Brooks Running — the Exact implementation of the Brooks mobile-commerce
+// prototype (LLP 0000). Same real catalog, prices, per-size stock, and live
+// Brooks CDN photography as the Expo app; the shopping journey runs browse →
+// detail → variant selection → a cart that builds real Brooks variant ids
+// (LLP 0002). State-driven screens in one root component — the storefront-app
+// shape LLP 0004 verified end-to-end.
+//
+// Brand notes (LLP 0003): Brooks zeroes border-radius sitewide — square
+// corners are a brand trait, so nothing here sets `radius`. Ink is #0E131F
+// (never #000), blue #003789 is the accent, and lime #ECF000 is a spark —
+// badges and highlights, never a surface.
+
+use categories from "../../data/brooks.ts"
+use categoryLabel from "../../data/brooks.ts"
+use gridFor from "../../data/brooks.ts"
+use gridTop from "../../data/brooks.ts"
+use getProduct from "../../data/brooks.ts"
+use defaultColor from "../../data/brooks.ts"
+use defaultWidth from "../../data/brooks.ts"
+use imagesOf from "../../data/brooks.ts"
+use mainImageUrl from "../../data/brooks.ts"
+use colorwayOf from "../../data/brooks.ts"
+use colorThumbUrl from "../../data/brooks.ts"
+use sized from "../../data/brooks.ts"
+use sizesOf from "../../data/brooks.ts"
+use widthsOf from "../../data/brooks.ts"
+use priceOf from "../../data/brooks.ts"
+use listPriceOf from "../../data/brooks.ts"
+use productEyebrow from "../../data/brooks.ts"
+use descriptionOf from "../../data/brooks.ts"
+use supportLabel from "../../data/brooks.ts"
+use hasSoldOutSizes from "../../data/brooks.ts"
+use starsLabel from "../../data/brooks.ts"
+use variantId from "../../data/brooks.ts"
+use addLine from "../../data/brooks.ts"
+use changeQty from "../../data/brooks.ts"
+use removeLine from "../../data/brooks.ts"
+use cartCount from "../../data/brooks.ts"
+use cartSubtotal from "../../data/brooks.ts"
+use shippingFor from "../../data/brooks.ts"
+use freeShippingGap from "../../data/brooks.ts"
+use formatPrice from "../../data/brooks.ts"
+use harvestedAt from "../../data/brooks.ts"
+use heroTargetMs from "../../data/brooks.ts"
+use countdownLabel from "../../data/brooks.ts"
+use nextSecondAfter from "../../data/brooks.ts"
+
+component BrooksApp
+  state screen = "home"
+  state categoryId = "featured-new-arrivals"
+  state query = ""
+  state selectedId = ""
+  state selectedColor = ""
+  state selectedSize = ""
+  state selectedWidth = ""
+  state mainUrl = ""
+  state justAdded = false
+  state checkoutNote = false
+  state cart = []
+
+  derive cats = categories()
+  derive visible = gridFor(categoryId, query) memoRows("id")
+  derive count = cartCount(cart)
+  derive subtotal = cartSubtotal(cart)
+  derive shipping = shippingFor(subtotal)
+  derive canAdd = selectedSize != ""
+
+  action goHome writes screen
+    screen = "home"
+  action goBrowse writes screen, query
+    screen = "browse"
+    query = ""
+  action goCart writes screen, checkoutNote
+    screen = "cart"
+    checkoutNote = false
+  action openCategory(id) writes categoryId, screen, query
+    categoryId = id
+    screen = "browse"
+    query = ""
+  action setQuery(value) writes query
+    query = value
+  action openProduct(id) writes selectedId, selectedColor, selectedSize, selectedWidth, mainUrl, justAdded, screen
+    selectedId = id
+    selectedColor = defaultColor(id)
+    selectedWidth = defaultWidth(id)
+    selectedSize = ""
+    mainUrl = ""
+    justAdded = false
+    screen = "detail"
+  action selectColor(code) writes selectedColor, selectedSize, mainUrl, justAdded
+    selectedColor = code
+    selectedSize = ""
+    mainUrl = ""
+    justAdded = false
+  action selectWidth(value) writes selectedWidth
+    selectedWidth = value
+  action selectSize(value) writes selectedSize
+    selectedSize = value
+  action selectImage(url) writes mainUrl
+    mainUrl = url
+  action addToCart writes cart, justAdded
+    cart = addLine(cart, selectedId, selectedColor, selectedSize, selectedWidth)
+    justAdded = true
+  action incLine(lineId) writes cart
+    cart = changeQty(cart, lineId, 1)
+  action decLine(lineId) writes cart
+    cart = changeQty(cart, lineId, -1)
+  action dropLine(lineId) writes cart
+    cart = removeLine(cart, lineId)
+  action showCheckoutNote writes checkoutNote
+    checkoutNote = true
+
+  contract
+    has node testId="brooks-app"
+    has node testId="cart-count"
+    when screen == "browse" then has node testId="product-grid"
+    when screen == "detail" then has node testId="add-panel"
+    when screen == "cart" then has node testId="cart-screen"
+    press node testId="nav-bag" -> goCart
+    action addToCart writes cart, justAdded
+    action openProduct writes selectedId, selectedColor, selectedSize, selectedWidth, mainUrl, justAdded, screen
+
+  view
+    column width="100%" align="center" background="#FFFFFF" testId="brooks-app"
+      header width="100%" align="center" background="#FFFFFF" paddingTop=18 paddingBottom=18
+        row width="100%" maxWidth=1080 paddingLeft=20 paddingRight=20 align="center" justify="space-between" gap=16 wrap="wrap"
+          button press=goHome label="Brooks home" testId="nav-home" background="transparent" borderWidth=0 padding=0
+            row gap=10 align="center"
+              text "BROOKS" size=22 weight=900 letterSpacing=3 color="#0E131F"
+              text "Let's Run There" size=13 color="#707070"
+          row gap=10 align="center"
+            button press=goBrowse label="Shop" testId="nav-shop" background="#FFFFFF" borderWidth=2 borderColor="#0E131F" paddingTop=10 paddingBottom=10 paddingLeft=18 paddingRight=18
+              text "SHOP" size=12 weight=700 letterSpacing=1.2 color="#0E131F"
+            button press=goCart label="Bag" testId="nav-bag" background="#0E131F" borderWidth=0 paddingTop=10 paddingBottom=10 paddingLeft=18 paddingRight=18
+              row gap=8 align="center"
+                text "BAG" size=12 weight=700 letterSpacing=1.2 color="#FFFFFF"
+                column minWidth=20 paddingLeft=6 paddingRight=6 paddingTop=1 paddingBottom=1 align="center" background=count > 0 ? "#ECF000" : "#3C4250"
+                  text `${count}` size=12 weight=800 color=count > 0 ? "#003789" : "#A0A4AD" testId="cart-count"
+
+      when screen == "home"
+        HomeScreen(open=openCategory, openItem=openProduct, shop=goBrowse)
+      else
+        when screen == "browse"
+          BrowseScreen(cats=cats, categoryId=categoryId, query=query, visible=visible, open=openProduct, choose=openCategory, search=setQuery)
+        else
+          when screen == "detail"
+            DetailScreen(productId=selectedId, colorCode=selectedColor, size=selectedSize, width=selectedWidth, mainUrl=mainUrl, justAdded=justAdded, canAdd=canAdd, back=goBrowse, pickColor=selectColor, pickWidth=selectWidth, pickSize=selectSize, pickImage=selectImage, add=addToCart, bag=goCart)
+          else
+            CartScreen(cart=cart, count=count, subtotal=subtotal, shipping=shipping, checkoutNote=checkoutNote, inc=incLine, dec=decLine, drop=dropLine, shop=goBrowse, open=openProduct, checkout=showCheckoutNote)
+
+      footer width="100%" align="center" background="#F8F8F8" paddingTop=28 paddingBottom=28
+        column maxWidth=1080 width="100%" paddingLeft=20 paddingRight=20 gap=6 align="center"
+          text "RUN HAPPY PROMISE" size=11 weight=700 letterSpacing=1.2 color="#707070"
+          text "Take it for a 90-day trial run. If you're not happy, we're not happy." size=14 color="#0E131F"
+          text `Real Brooks catalog, harvested ${harvestedAt()} · photography live from Brooks · prototype, no orders placed` size=12 color="#A0A4AD"
+
+component HomeScreen
+  props
+    open: (id) => void
+    openItem: (id) => void
+    shop: () => void
+
+  derive featured = gridTop("featured-best-sellers")
+
+  view
+    column width="100%" maxWidth=1080 paddingLeft=20 paddingRight=20 gap=40 testId="home-screen"
+      row width="100%" wrap="wrap" align="stretch" background="#14295F"
+        column flex=1 minWidth=320 padding=36 gap=14 justify="center"
+          row gap=8 align="center" background="#0E131F" alignSelf="flex-start" paddingTop=6 paddingBottom=6 paddingLeft=12 paddingRight=12
+            text temporal(() => ({ value: countdownLabel(heroTargetMs(), now()), nextChangeAt: nextSecondAfter(now()) })) size=14 weight=700 letterSpacing=1 color="#ECF000" testId="countdown"
+          text "JOSH KERR ATTEMPTS MILE WORLD RECORD" size=12 weight=700 letterSpacing=1.4 color="#ECF000"
+          text "Project 222" size=46 weight=900 letterSpacing=-1 color="#FFFFFF"
+          text "On July 18th, 2026, Brooks Beast Josh Kerr will attempt to break the mile world record on British soil in 222 seconds." size=15 lineHeight=24 color="#C7CDDC" maxWidth=460
+          button press=shop label="Shop new arrivals" testId="hero-cta" background="#FFFFFF" borderWidth=0 paddingTop=14 paddingBottom=14 paddingLeft=24 paddingRight=24 alignSelf="flex-start"
+            text "SHOP NEW ARRIVALS" size=13 weight=700 letterSpacing=1.2 color="#0E131F"
+        column flex=1 minWidth=320 height=440 overflow="hidden" background="#0E131F"
+          image src="https://www.brooksrunning.com/on/demandware.static/-/Sites/default/dw06ee0bb5/cms-content/Project/Brooks-Running/Homepage/2026/July/Josh-Kerr-Hero/S26_Video_Project222_JoshKerr_Hero_15s_Ambient_750x1200_v2mp400_00_02_06Still001.jpg" alt="Josh Kerr training on the track at dusk" width="100%" height="100%" objectFit="cover"
+
+      column gap=16 width="100%"
+        text "Wherever the day takes you" size=26 weight=800 letterSpacing=-0.3 color="#0E131F" headingLevel=2
+        row gap=10 wrap="wrap" testId="home-categories"
+          each cat in categories() key=cat.id
+            button press=open(cat.id) label=cat.label testId=`home-cat-${cat.id}` background="#FFFFFF" borderWidth=1.5 borderColor="#E5E5E5" paddingTop=12 paddingBottom=12 paddingLeft=18 paddingRight=18
+              text cat.label size=14 weight=600 color="#0E131F"
+
+      column gap=16 width="100%"
+        row align="center" justify="space-between" width="100%" wrap="wrap" gap=10
+          text "Build your training rotation" size=26 weight=800 letterSpacing=-0.3 color="#0E131F" headingLevel=2
+          button press=shop label="See all" background="transparent" borderWidth=0 padding=0
+            text "SEE ALL →" size=12 weight=700 letterSpacing=1.2 color="#003789"
+        row gap=16 wrap="wrap" align="stretch" width="100%" testId="home-featured"
+          each item in featured key=item.id
+            ProductCard(item=item, open=openItem)
+
+component BrowseScreen
+  props
+    cats: object
+    categoryId: string
+    query: string
+    visible: object
+    open: (id) => void
+    choose: (id) => void
+    search: (value) => void
+
+  view
+    column width="100%" maxWidth=1080 paddingLeft=20 paddingRight=20 gap=20 testId="browse-screen"
+      column gap=4
+        text categoryLabel(categoryId) size=34 weight=900 letterSpacing=-0.5 color="#0E131F" headingLevel=1
+        text `${visible.length} styles` size=13 color="#707070" testId="style-count"
+
+      row gap=8 wrap="wrap" testId="category-chips"
+        each cat in cats key=cat.id
+          button press=choose(cat.id) label=cat.label testId=`chip-${cat.id}` background=cat.id == categoryId ? "#0E131F" : "#FFFFFF" borderWidth=1.5 borderColor=cat.id == categoryId ? "#0E131F" : "#E5E5E5" paddingTop=9 paddingBottom=9 paddingLeft=14 paddingRight=14
+            text cat.label size=13 weight=600 color=cat.id == categoryId ? "#FFFFFF" : "#0E131F"
+
+      input value=query change=search placeholder="Search this list — name, franchise, cushion…" label="Search products" testId="search-input" padding=12 background="#F8F8F8" borderWidth=1.5 borderColor="#E5E5E5" color="#0E131F" maxWidth=420 width="100%"
+
+      row gap=16 wrap="wrap" align="stretch" width="100%" testId="product-grid"
+        each item in visible key=item.id
+          ProductCard(item=item, open=open)
+      when visible.length == 0
+        column gap=8 padding=40 align="center" width="100%" testId="empty-grid"
+          text "Nothing here yet" size=18 weight=700 color="#0E131F"
+          text "No styles match that search. Try a franchise — Ghost, Glycerin, Adrenaline…" size=14 color="#707070"
+
+component ProductCard
+  props
+    item: object
+    open: (id) => void
+
+  view
+    button press=open(item.id) label=item.name testId=`card-${item.id}` background="transparent" borderWidth=0 padding=0 width=240 minWidth=200 flex=1 align="stretch"
+      column gap=0 width="100%" borderWidth=1 borderColor="#E5E5E5" background="#FFFFFF"
+        stack width="100%" height=230 overflow="hidden" background="#F8F8F8"
+          image src=item.imageUrl alt=item.name width="100%" height="100%" objectFit="contain"
+          when item.badge != ""
+            column position="absolute" top=10 left=10 paddingTop=4 paddingBottom=4 paddingLeft=8 paddingRight=8 background=item.badge == "Sale" ? "#D4281C" : "#ECF000"
+              text item.badge size=10 weight=800 letterSpacing=1 color=item.badge == "Sale" ? "#FFFFFF" : "#003789"
+        column gap=3 padding=14 align="flex-start" width="100%"
+          text item.name size=15 weight=700 color="#0E131F" numberOfLines=1 width="100%"
+          when item.cushion != ""
+            text `${item.cushion} cushion · ${item.colorCount} colors` size=12 color="#707070" numberOfLines=1 width="100%"
+          row gap=8 align="center"
+            text formatPrice(item.price) size=15 weight=700 color=item.onSale ? "#D4281C" : "#0E131F"
+            when item.onSale
+              text `was ${formatPrice(item.listPrice)}` size=12 color="#707070"
+          when item.rating > 0
+            row gap=6 align="center"
+              text starsLabel(item.rating) size=12 color="#0E131F"
+              text `${item.rating} (${item.reviewCount})` size=11 color="#707070"
+
+component DetailScreen
+  props
+    productId: string
+    colorCode: string
+    size: string
+    width: string
+    mainUrl: string
+    justAdded: boolean
+    canAdd: boolean
+    back: () => void
+    pickColor: (code) => void
+    pickWidth: (value) => void
+    pickSize: (value) => void
+    pickImage: (url) => void
+    add: () => void
+    bag: () => void
+
+  derive product = getProduct(productId)
+  derive colorway = colorwayOf(productId, colorCode)
+  derive gallery = imagesOf(productId, colorCode)
+  derive sizes = sizesOf(productId, colorCode)
+  derive widths = widthsOf(productId, colorCode)
+  derive price = priceOf(productId, colorCode)
+  derive listPrice = listPriceOf(productId, colorCode)
+
+  view
+    column width="100%" maxWidth=1080 paddingLeft=20 paddingRight=20 gap=20 testId="detail-screen"
+      button press=back label="Back to shop" testId="detail-back" background="transparent" borderWidth=0 padding=0 alignSelf="flex-start"
+        text "← BACK" size=12 weight=700 letterSpacing=1.2 color="#707070"
+
+      row gap=32 wrap="wrap" align="flex-start" width="100%"
+        column gap=10 flex=1 minWidth=340
+          stack width="100%" height=460 overflow="hidden" background="#F8F8F8" testId="detail-image"
+            image src=mainImageUrl(productId, colorCode, mainUrl) alt=product.name width="100%" height="100%" objectFit="contain"
+          row gap=8 wrap="wrap"
+            each img in gallery key=img.url
+              button press=pickImage(img.url) label="View angle" background="#F8F8F8" borderWidth=1.5 borderColor=img.url == mainUrl ? "#0E131F" : "#E5E5E5" padding=2
+                image src=sized(img.url, 128) alt=img.alt width=58 height=58 objectFit="contain"
+
+        column gap=18 flex=1 minWidth=320 align="stretch" testId="add-panel"
+          column gap=6
+            text productEyebrow(productId) size=12 weight=700 letterSpacing=1.2 color="#707070"
+            text product.name size=30 weight=900 letterSpacing=-0.5 color="#0E131F" headingLevel=1
+            when product.rating != null
+              row gap=6 align="center"
+                text starsLabel(product.rating) size=13 color="#0E131F"
+                text `${product.rating} · ${product.reviewCount} reviews` size=12 color="#707070"
+            row gap=10 align="center"
+              text formatPrice(price) size=22 weight=800 color=product.onSale ? "#D4281C" : "#0E131F" testId="detail-price"
+              when listPrice > price
+                text `was ${formatPrice(listPrice)}` size=14 color="#707070"
+
+          column gap=8
+            row gap=8 align="center" justify="space-between"
+              text "COLOR" size=11 weight=700 letterSpacing=1.2 color="#707070"
+              text colorway.name size=12 color="#707070" numberOfLines=1
+            row gap=8 wrap="wrap" testId="color-swatches"
+              each c in product.colors key=c.code
+                button press=pickColor(c.code) label=c.name testId=`swatch-${c.code}` background="#F8F8F8" borderWidth=2 borderColor=c.code == colorCode ? "#0E131F" : "#E5E5E5" padding=2
+                  image src=colorThumbUrl(productId, c.code) alt=c.name width=64 height=64 objectFit="contain"
+
+          when widths.length > 0
+            column gap=8
+              text "WIDTH" size=11 weight=700 letterSpacing=1.2 color="#707070"
+              row gap=8 wrap="wrap" testId="width-chips"
+                each w in widths key=w.value
+                  when w.available
+                    button press=pickWidth(w.value) label=w.label testId=`width-${w.value}` background=w.value == width ? "#0E131F" : "#FFFFFF" borderWidth=1.5 borderColor=w.value == width ? "#0E131F" : "#E5E5E5" paddingTop=11 paddingBottom=11 paddingLeft=14 paddingRight=14
+                      text w.label size=13 weight=600 color=w.value == width ? "#FFFFFF" : "#0E131F"
+                  else
+                    column paddingTop=11 paddingBottom=11 paddingLeft=14 paddingRight=14 borderWidth=1.5 borderColor="#E5E5E5" background="#F8F8F8"
+                      text w.label size=13 color="#A0A4AD"
+              text "Four widths is the Brooks difference — most running brands stop at one." size=12 color="#707070"
+
+          column gap=8
+            text "SELECT SIZE" size=11 weight=700 letterSpacing=1.2 color="#707070"
+            row gap=8 wrap="wrap" testId="size-chips"
+              each s in sizes key=s.value
+                when s.available
+                  button press=pickSize(s.value) label=`Size ${s.label}` testId=`size-${s.value}` background=s.value == size ? "#0E131F" : "#FFFFFF" borderWidth=1.5 borderColor=s.value == size ? "#0E131F" : "#E5E5E5" paddingTop=11 paddingBottom=11 paddingLeft=16 paddingRight=16 minWidth=56 align="center"
+                    text s.label size=13 weight=600 color=s.value == size ? "#FFFFFF" : "#0E131F"
+                else
+                  column paddingTop=11 paddingBottom=11 paddingLeft=16 paddingRight=16 minWidth=56 align="center" borderWidth=1.5 borderColor="#E5E5E5" background="#F8F8F8"
+                    text s.label size=13 color="#A0A4AD"
+            when hasSoldOutSizes(productId, colorCode)
+              text "Grayed sizes are out of stock in this color." size=12 color="#707070"
+
+          when canAdd
+            button press=add label="Add to bag" testId="add-to-cart" background="#0E131F" borderWidth=0 paddingTop=16 paddingBottom=16 align="center" width="100%"
+              text `ADD TO BAG · ${formatPrice(price)}` size=13 weight=700 letterSpacing=1.2 color="#FFFFFF"
+          else
+            column paddingTop=16 paddingBottom=16 align="center" width="100%" background="#F2F2F2" testId="add-disabled"
+              text "SELECT A SIZE" size=13 weight=700 letterSpacing=1.2 color="#A0A4AD"
+
+          when canAdd
+            text `Builds real Brooks variant ${variantId(productId, width, colorCode, size)}` size=11 color="#A0A4AD" testId="variant-preview"
+
+          when justAdded == true
+            row gap=10 align="center" background="#ECF000" padding=12 testId="added-note"
+              text "✓ Added to your bag" size=13 weight=700 color="#003789"
+              spacer
+              button press=bag label="View bag" testId="view-bag" background="#0E131F" borderWidth=0 paddingTop=8 paddingBottom=8 paddingLeft=14 paddingRight=14
+                text "VIEW BAG" size=11 weight=700 letterSpacing=1.2 color="#FFFFFF"
+
+          column gap=10 background="#F8F8F8" padding=18
+            text "How it runs" size=16 weight=800 color="#0E131F"
+            row gap=8 wrap="wrap"
+              when product.cushion != null
+                column paddingTop=6 paddingBottom=6 paddingLeft=10 paddingRight=10 background="#FFFFFF" borderWidth=1 borderColor="#E5E5E5"
+                  text `${product.cushion} cushion` size=12 weight=600 color="#0E131F"
+              when supportLabel(productId) != ""
+                column paddingTop=6 paddingBottom=6 paddingLeft=10 paddingRight=10 background="#FFFFFF" borderWidth=1 borderColor="#E5E5E5"
+                  text supportLabel(productId) size=12 weight=600 color="#0E131F"
+              each tag in product.bestFor key=tag
+                column paddingTop=6 paddingBottom=6 paddingLeft=10 paddingRight=10 background="#FFFFFF" borderWidth=1 borderColor="#E5E5E5"
+                  text tag size=12 color="#3C4250"
+
+          when descriptionOf(productId) != ""
+            text descriptionOf(productId) size=14 lineHeight=23 color="#3C4250"
+
+component CartScreen
+  props
+    cart: object
+    count: number
+    subtotal: number
+    shipping: number
+    checkoutNote: boolean
+    inc: (lineId) => void
+    dec: (lineId) => void
+    drop: (lineId) => void
+    shop: () => void
+    open: (id) => void
+    checkout: () => void
+
+  view
+    column width="100%" maxWidth=760 paddingLeft=20 paddingRight=20 gap=20 testId="cart-screen"
+      text `Bag (${count})` size=34 weight=900 letterSpacing=-0.5 color="#0E131F" headingLevel=1
+
+      when cart.length == 0
+        column gap=12 padding=40 align="center" width="100%" background="#F8F8F8" testId="empty-cart"
+          text "There's nothing in your cart. Let's remedy that, shall we?" size=18 weight=700 color="#0E131F" textAlign="center"
+          button press=shop label="Find your run" testId="empty-cta" background="#0E131F" borderWidth=0 paddingTop=14 paddingBottom=14 paddingLeft=24 paddingRight=24
+            text "FIND YOUR RUN" size=13 weight=700 letterSpacing=1.2 color="#FFFFFF"
+      else
+        column gap=0 width="100%"
+          when freeShippingGap(subtotal) > 0
+            column padding=14 background="#F8F8F8" width="100%"
+              text `You're ${formatPrice(freeShippingGap(subtotal))} from free shipping` size=13 weight=600 color="#003789"
+          else
+            column padding=14 background="#F8F8F8" width="100%"
+              text "You've earned free shipping 🎉" size=13 weight=600 color="#097B52"
+
+          each line in cart key=line.id
+            row gap=16 paddingTop=18 paddingBottom=18 width="100%" align="flex-start" testId=`line-${line.id}`
+              button press=open(line.productId) label=line.name background="#F8F8F8" borderWidth=0 padding=0
+                image src=line.imageUrl alt=line.name width=96 height=96 objectFit="contain"
+              column gap=3 flex=1 align="flex-start"
+                text line.name size=15 weight=700 color="#0E131F"
+                text line.colorName size=12 color="#707070" numberOfLines=1
+                text `Size ${line.size} · ${line.widthLabel}` size=12 color="#707070"
+                text `#${line.id}` size=11 color="#A0A4AD" testId=`variant-${line.id}`
+                row gap=0 align="center" paddingTop=6
+                  button press=dec(line.id) label="Decrease quantity" testId=`dec-${line.id}` background="#FFFFFF" borderWidth=1.5 borderColor="#E5E5E5" width=34 height=34 align="center" justify="center"
+                    text "−" size=16 weight=700 color="#0E131F"
+                  column width=38 height=34 align="center" justify="center" borderWidth=1.5 borderColor="#E5E5E5" background="#FFFFFF"
+                    text `${line.qty}` size=13 weight=700 color="#0E131F" testId=`qty-${line.id}`
+                  button press=inc(line.id) label="Increase quantity" testId=`inc-${line.id}` background="#FFFFFF" borderWidth=1.5 borderColor="#E5E5E5" width=34 height=34 align="center" justify="center"
+                    text "+" size=16 weight=700 color="#0E131F"
+              column gap=8 align="flex-end"
+                text formatPrice(line.price * line.qty) size=15 weight=700 color="#0E131F"
+                button press=drop(line.id) label="Remove" testId=`remove-${line.id}` background="transparent" borderWidth=0 padding=0
+                  text "REMOVE" size=11 weight=700 letterSpacing=1 color="#707070"
+
+          column gap=8 paddingTop=18 width="100%"
+            row justify="space-between" width="100%"
+              text "Subtotal" size=14 color="#707070"
+              text formatPrice(subtotal) size=14 weight=700 color="#0E131F" testId="cart-subtotal"
+            row justify="space-between" width="100%"
+              text "Shipping" size=14 color="#707070"
+              text shipping == 0 ? "Free" : formatPrice(shipping) size=14 weight=700 color=shipping == 0 ? "#097B52" : "#0E131F"
+            row justify="space-between" width="100%" paddingTop=8
+              text "Total" size=18 weight=800 color="#0E131F"
+              text formatPrice(subtotal + shipping) size=18 weight=800 color="#0E131F" testId="cart-total"
+
+          column gap=12 paddingTop=16 width="100%"
+            button press=checkout label="Checkout" testId="checkout" background="#0E131F" borderWidth=0 paddingTop=16 paddingBottom=16 align="center" width="100%"
+              text `CHECKOUT · ${formatPrice(subtotal + shipping)}` size=13 weight=700 letterSpacing=1.2 color="#FFFFFF"
+
+            when checkoutNote == true
+              column gap=6 background="#14295F" padding=18 width="100%" testId="scope-note"
+                text "PROTOTYPE NOTE" size=10 weight=700 letterSpacing=1.2 color="#ECF000"
+                text "The journey ends here by design — no order is ever placed. Every line above carries the exact variant id Brooks's own Cart-AddProduct endpoint accepts, so the last mile is documented, not guessed." size=13 lineHeight=20 color="#FFFFFF"
+
+            button press=shop label="Keep shopping" background="transparent" borderWidth=0 padding=0 alignSelf="center"
+              text "KEEP SHOPPING" size=12 weight=700 letterSpacing=1.2 color="#707070"

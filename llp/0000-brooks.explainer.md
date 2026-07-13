@@ -191,11 +191,13 @@ task slug so parallel agents can contribute without editing a shared log.
   first executive demo?
 - What accessibility, responsiveness, performance, offline behavior, analytics,
   automated testing, and device coverage define “demo ready”?
-- [observed — LLP 0004] **How should Brooks consume Exact's `origin/main`?** Still
-  open, and now urgent: the local checkout at `~/projects/exact` is 67 commits
-  behind `origin/main` with ~80 uncommitted local changes. It was deliberately left
-  untouched. Whoever builds the Exact app must choose explicitly between that tree
-  and a fresh clone, and record the choice.
+- ~~How should Brooks consume Exact's `origin/main`?~~ **Resolved
+  [confirmed — Charlie Cheever, 2026-07-13]: use a fresh clone of
+  `origin/main`.** The clone lives at `~/projects/exact-main` (c3f49e50,
+  `vendor/ibex` submodule initialized); `apps/exact` was scaffolded from it
+  with `exact new` and links back to it via `exact.links.json`. The dirty tree
+  at `~/projects/exact` was never touched. Build record:
+  [diaries/2026-07-13-exact-app.md](../diaries/2026-07-13-exact-app.md).
 - Does the catalog snapshot need re-harvesting on a schedule to stay truthful, or
   is a dated snapshot honest enough if the app says when it was captured?
 - Who can confirm the remaining inferred claims and promote this root LLP from

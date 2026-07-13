@@ -22,9 +22,11 @@ const TARGETS = [
     libFiles: ['types.ts', 'query.ts', 'images.ts', 'constructor.ts'],
   },
   {
+    // The Exact app bundles the snapshot as a typed import (LLP 0004: the
+    // most-proven data path in the Exact repo) rather than fetching it.
     name: 'exact',
     dir: path.join(ROOT, 'apps', 'exact'),
-    data: path.join(ROOT, 'apps', 'exact', 'public'),
+    data: path.join(ROOT, 'apps', 'exact', 'src', 'data'),
     lib: null,
     libFiles: [],
   },

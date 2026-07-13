@@ -168,6 +168,42 @@ $EXACT_AGENT_TOKEN` even on loopback. MCP bridge at `/__exact/mcp`.
 contract selector, the agent handle, and the Playwright hook. This is how the Exact
 app gets verified without a human driving it.
 
+## Addendum, 2026-07-13 (after the build): what the Brooks app proved
+
+[verified by building — `apps/exact`, exact@origin/main c3f49e50, agent-driven
+end-to-end; full record in
+[diaries/2026-07-13-exact-app.md](../diaries/2026-07-13-exact-app.md)]
+
+Corrections and confirmations to the sections above:
+
+- **The checkout question is resolved:** fresh clone of `origin/main` at
+  `~/projects/exact-main` (Charlie's call). Two undocumented steps make a
+  fresh clone usable: `git submodule update --init vendor/ibex`, and the CLI
+  builds as `cargo build -p exact-cli` (not `-p exact`).
+- **"No animation DSL" was too pessimistic in one spot:** `temporal()` text
+  bindings exist and work — the Brooks app runs a once-per-second Project 222
+  countdown on the JS-tier web target. Ticking UI is possible; *motion* still
+  is not.
+- **The web agent bootstrap gotcha is deeper than "add
+  `ensureAppAgentBootstrap()`":** on current `origin/main` the in-browser
+  agent server transitively imports `node:worker_threads` and `node:crypto`
+  at module scope (code-mode), which Vite externalizes into throw-on-access
+  shims — the bootstrap dies and web targets never register. Workaround:
+  alias both builtins to stubs (`apps/exact/src/shims/`); the crypto stub
+  needs a real sha256 because code-mode hashes its SDK manifest at import.
+- **`exact new` scaffolds fail `bun run typecheck` out of the box** — all
+  errors inside the source-linked `@exact/*` packages, none in app code.
+- **Agent-driving discipline:** snapshots taken mid-re-render return
+  `refs: {}` and tap-by-testId 422s against them (retry/poll or use
+  `exact_wait`); with multiple registered targets the relay's
+  "most recently active" default can route to zombie pages — pass
+  `?target=` using the page's own `sessionStorage.__exact_web_agent_target_id`.
+- **The prediction held:** the finished Exact app is a genuinely good
+  real-data storefront (grid, chips, search, variant selection, cart with
+  real Brooks variant ids) and not a motion showcase. `memoRows("id")`,
+  the sidecar ceremony, state-driven screens, and remote CDN images all
+  behaved exactly as §"The four things" said they would.
+
 ## Recommended starting recipe
 
 1. Copy `js/src/storefront-app/` to a new lab, or `exact new` into `apps/exact`.

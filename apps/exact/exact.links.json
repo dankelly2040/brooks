@@ -1,0 +1,10 @@
+{
+  "@exact/adapter-node": "../../../exact-main/packages/exact-adapter-node",
+  "@exact/contract": "../../../exact-main/packages/exact-contract",
+  "@exact/core": "../../../exact-main/packages/exact-core",
+  "@exact/devtools": "../../../exact-main/packages/exact-devtools",
+  "@exact/renderer": "../../../exact-main/packages/exact-renderer",
+  "@exact/router": "../../../exact-main/packages/exact-router",
+  "@exact/server": "../../../exact-main/packages/exact-server",
+  "@exact/runtime": "../../../exact-main/js"
+}
