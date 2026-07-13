@@ -9,7 +9,7 @@
 **Author:** Charlie Cheever / Codex
 **Date:** 2026-07-13
 **Revised:** 2026-07-13
-**Related:** [ccheever/llp](https://github.com/ccheever/llp)
+**Related:** LLP 0001, [ccheever/llp](https://github.com/ccheever/llp)
 
 ## Summary
 
@@ -36,6 +36,25 @@ adding products to a cart. Completing a purchase is explicitly out of scope.
 [confirmed — Charlie Cheever, 2026-07-13] The Expo app should work on iOS and
 Android, should ideally work on the web, and must target Expo SDK 57 so that it
 can be run with Expo Go.
+
+### Required website surfaces
+
+[confirmed — Charlie Cheever, 2026-07-13] The first complete prototype should
+mirror the commerce-focused structure and content of the current Brooks website,
+including:
+
+- the home experience, led by the current Josh Kerr / Project 222 feature;
+- Men's and Women's shopping sections;
+- New Arrivals;
+- the Shoe Finder;
+- product browsing and product details needed to buy shoes;
+- login; and
+- a working shopping cart through add-to-cart and cart management.
+
+[confirmed — Charlie Cheever, 2026-07-13] Non-commerce footer and corporate
+content such as “Our Purpose” may be deferred. The priority is a convincing,
+working shoe-discovery and shoe-buying experience rather than exhaustive parity
+with every page on the website.
 
 ### Success criteria
 
@@ -64,10 +83,14 @@ API knowledge in the repository so agents can build against it consistently.
 [confirmed — Charlie Cheever, 2026-07-13] The live-data journey ends at a
 working cart. The project does not need to submit payment or complete an order.
 
-[inferred] API research and app behavior should avoid bypassing access controls,
-capturing user secrets, placing orders, or depending on undocumented behavior
-without recording the risk. The exact authorization, rate-limit, caching, and
-data-retention constraints still need confirmation.
+[confirmed — Charlie Cheever, 2026-07-13] This is a prototype, so it does not
+need a heavyweight API-governance process. It must nevertheless use Brooks
+services responsibly.
+
+[inferred] Responsible prototype behavior means using normal publicly reachable
+website flows, keeping request volume low, avoiding access-control bypasses and
+secret capture, never placing an order, caching where it reduces unnecessary
+traffic, and documenting dependencies on undocumented behavior.
 
 ## Design direction
 
@@ -82,17 +105,22 @@ character of the Brooks website. It should feel spiritually related to Brooks
 while remaining distinctively native, highly polished, and appropriate for
 mobile interaction.
 
-[inferred] The design survey should evaluate at least navigation, discovery,
-search and filtering, product presentation, size and color selection, cart
-interaction, motion, accessibility, and the transition between editorial and
-commerce content. The specific reference apps and evaluation rubric remain to
-be chosen.
+[inferred] The reference set and evaluation rubric are defined in
+[LLP 0001](./0001-mobile-shoe-commerce-design.research.md). Brooks is the
+canonical source for brand and scope; Nike, Zappos, adidas, and GOAT provide
+complementary native-commerce benchmarks.
 
 ## Planned product surfaces
 
 [confirmed — Charlie Cheever, 2026-07-13] The repository is expected to contain
 an Expo app and an Exact app that pursue the same product experience with
 different implementation goals.
+
+[confirmed — Charlie Cheever, 2026-07-13] The Exact app should use the `main`
+branch from `origin` at [ccheever/exact](https://github.com/ccheever/exact) for
+now rather than pinning a release. Exact may be fixed during this project, and
+the prototype should continue following upstream `origin/main` as those changes
+land.
 
 [inferred] Shared schemas, captured API knowledge, design tokens, assets, and
 test fixtures may belong in common packages, but the sharing boundary should be
@@ -118,9 +146,10 @@ decisions, and useful retrospectives. They should not contain secrets or attempt
 to preserve private hidden reasoning, and they do not replace code or design
 documentation.
 
-[inferred] A lightweight structured format will make comparisons across tasks,
-agents, Expo, and Exact more useful. The storage location, entry granularity,
-required fields, and review cadence remain to be decided.
+[inferred] Agent diaries live under [`diaries/`](../diaries/README.md). Each
+substantial implementation or research task should create one short,
+append-only entry using the template there. Entries are organized by date and
+task slug so parallel agents can contribute without editing a shared log.
 
 ## Working principles
 
@@ -139,22 +168,18 @@ required fields, and review cadence remain to be decided.
 
 - Which Brooks market, locale, currency, and website environment define the
   canonical demo experience?
-- Which exact customer journey is required for the first milestone: home,
-  category browsing, search, filtering, product details, recommendations,
-  variants, favorites, account, and cart editing?
-- What permission, attribution, asset-usage, rate-limit, caching, and data
-  retention constraints govern use of Brooks website services?
+- Within the required website surfaces, which secondary features—search,
+  filtering, recommendations, favorites, and account details—must ship in the
+  first executive demo?
+- What attribution, asset-usage, caching, and data-retention constraints should
+  apply if the prototype moves beyond limited internal demonstration?
 - Does the cart need to interoperate with a cart created on the website, or only
   behave correctly within the prototype?
-- Which mobile commerce apps belong in the design survey, and what rubric will
-  determine which patterns to adopt?
 - What accessibility, responsiveness, performance, offline behavior, analytics,
   automated testing, and device coverage define “demo ready”?
-- Which version and runtime of Exact is the target, and which platforms does its
-  experiment need to support?
+- How should Brooks consume Exact's moving `origin/main`: source checkout,
+  workspace dependency, generated artifact, or another integration boundary?
 - What repository structure and code-sharing boundary best serve the Expo and
   Exact implementations?
-- Where should agent diaries live, what fields are mandatory, and should every
-  implementation task produce one entry or only noteworthy tasks?
 - Who can confirm the remaining inferred claims and promote this root LLP from
   `Draft` to `Active`?
