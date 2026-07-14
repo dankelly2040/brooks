@@ -13,6 +13,8 @@
 use categories from "../../data/brooks.ts"
 use categoryLabel from "../../data/brooks.ts"
 use gridFor from "../../data/brooks.ts"
+use gridPage from "../../data/brooks.ts"
+use gridItemIsFirstRow from "../../data/brooks.ts"
 use gridTop from "../../data/brooks.ts"
 use getProduct from "../../data/brooks.ts"
 use defaultColor from "../../data/brooks.ts"
@@ -57,9 +59,11 @@ component BrooksApp
   state justAdded = false
   state checkoutNote = false
   state cart = []
+  state visibleCount = 12
 
   derive cats = categories()
   derive visible = gridFor(categoryId, query) memoRows("id")
+  derive pageItems = gridPage(visible, visibleCount) memoRows("id")
   derive count = cartCount(cart)
   derive subtotal = cartSubtotal(cart)
   derive shipping = shippingFor(subtotal)
@@ -67,18 +71,23 @@ component BrooksApp
 
   action goHome writes screen
     screen = "home"
-  action goBrowse writes screen, query
+  action goBrowse writes screen, query, visibleCount
     screen = "browse"
     query = ""
+    visibleCount = 12
   action goCart writes screen, checkoutNote
     screen = "cart"
     checkoutNote = false
-  action openCategory(id) writes categoryId, screen, query
+  action openCategory(id) writes categoryId, screen, query, visibleCount
     categoryId = id
     screen = "browse"
     query = ""
-  action setQuery(value) writes query
+    visibleCount = 12
+  action setQuery(value) writes query, visibleCount
     query = value
+    visibleCount = 12
+  action loadMore writes visibleCount
+    visibleCount = visibleCount + 12
   action openProduct(id) writes selectedId, selectedColor, selectedSize, selectedWidth, mainUrl, justAdded, screen
     selectedId = id
     selectedColor = defaultColor(id)
@@ -119,6 +128,7 @@ component BrooksApp
     press node testId="nav-bag" -> goCart
     action addToCart writes cart, justAdded
     action openProduct writes selectedId, selectedColor, selectedSize, selectedWidth, mainUrl, justAdded, screen
+    action loadMore writes visibleCount
 
   view
     column width="100%" align="center" background="#FFFFFF" testId="brooks-app"
@@ -141,7 +151,7 @@ component BrooksApp
         HomeScreen(open=openCategory, openItem=openProduct, shop=goBrowse)
       else
         when screen == "browse"
-          BrowseScreen(cats=cats, categoryId=categoryId, query=query, visible=visible, open=openProduct, choose=openCategory, search=setQuery)
+          BrowseScreen(cats=cats, categoryId=categoryId, query=query, items=pageItems, total=visible.length, hasMore=pageItems.length < visible.length, open=openProduct, choose=openCategory, search=setQuery, more=loadMore)
         else
           when screen == "detail"
             DetailScreen(productId=selectedId, colorCode=selectedColor, size=selectedSize, width=selectedWidth, mainUrl=mainUrl, justAdded=justAdded, canAdd=canAdd, back=goBrowse, pickColor=selectColor, pickWidth=selectWidth, pickSize=selectSize, pickImage=selectImage, add=addToCart, bag=goCart)
@@ -174,7 +184,7 @@ component HomeScreen
           button press=shop label="Shop new arrivals" testId="hero-cta" background="#FFFFFF" borderWidth=0 paddingTop=14 paddingBottom=14 paddingLeft=24 paddingRight=24 alignSelf="flex-start"
             text "SHOP NEW ARRIVALS" size=13 weight=700 letterSpacing=1.2 color="#0E131F"
         column flex=1 minWidth=320 height=440 overflow="hidden" background="#0E131F"
-          image src="https://www.brooksrunning.com/on/demandware.static/-/Sites/default/dw06ee0bb5/cms-content/Project/Brooks-Running/Homepage/2026/July/Josh-Kerr-Hero/S26_Video_Project222_JoshKerr_Hero_15s_Ambient_750x1200_v2mp400_00_02_06Still001.jpg" alt="Josh Kerr training on the track at dusk" width="100%" height="100%" objectFit="cover"
+          image src="https://www.brooksrunning.com/on/demandware.static/-/Sites/default/dw06ee0bb5/cms-content/Project/Brooks-Running/Homepage/2026/July/Josh-Kerr-Hero/S26_Video_Project222_JoshKerr_Hero_15s_Ambient_750x1200_v2mp400_00_02_06Still001.jpg" alt="Josh Kerr training on the track at dusk" width="100%" height="100%" objectFit="cover" loading="eager" priority="high"
 
       column gap=16 width="100%"
         text "Wherever the day takes you" size=26 weight=800 letterSpacing=-0.3 color="#0E131F" headingLevel=2
@@ -190,23 +200,26 @@ component HomeScreen
             text "SEE ALL →" size=12 weight=700 letterSpacing=1.2 color="#003789"
         row gap=16 wrap="wrap" align="stretch" width="100%" testId="home-featured"
           each item in featured key=item.id
-            ProductCard(item=item, open=openItem)
+            ProductCard(item=item, open=openItem, eager=false)
 
 component BrowseScreen
   props
     cats: object
     categoryId: string
     query: string
-    visible: object
+    items: object
+    total: number
+    hasMore: boolean
     open: (id) => void
     choose: (id) => void
     search: (value) => void
+    more: () => void
 
   view
     column width="100%" maxWidth=1080 paddingLeft=20 paddingRight=20 gap=20 testId="browse-screen"
       column gap=4
         text categoryLabel(categoryId) size=34 weight=900 letterSpacing=-0.5 color="#0E131F" headingLevel=1
-        text `${visible.length} styles` size=13 color="#707070" testId="style-count"
+        text `${total} styles` size=13 color="#707070" testId="style-count"
 
       row gap=8 wrap="wrap" testId="category-chips"
         each cat in cats key=cat.id
@@ -216,23 +229,27 @@ component BrowseScreen
       input value=query change=search placeholder="Search this list — name, franchise, cushion…" label="Search products" testId="search-input" padding=12 background="#F8F8F8" borderWidth=1.5 borderColor="#E5E5E5" color="#0E131F" maxWidth=420 width="100%"
 
       row gap=16 wrap="wrap" align="stretch" width="100%" testId="product-grid"
-        each item in visible key=item.id
-          ProductCard(item=item, open=open)
-      when visible.length == 0
+        each item in items key=item.id
+          ProductCard(item=item, open=open, eager=gridItemIsFirstRow(items, item.id))
+      when total == 0
         column gap=8 padding=40 align="center" width="100%" testId="empty-grid"
           text "Nothing here yet" size=18 weight=700 color="#0E131F"
           text "No styles match that search. Try a franchise — Ghost, Glycerin, Adrenaline…" size=14 color="#707070"
+      when hasMore
+        button press=more label="Show more products" testId="load-more" background="#FFFFFF" borderWidth=2 borderColor="#0E131F" paddingTop=14 paddingBottom=14 paddingLeft=24 paddingRight=24 alignSelf="center"
+          text `SHOW MORE · ${total - items.length} REMAINING` size=12 weight=700 letterSpacing=1.2 color="#0E131F"
 
 component ProductCard
   props
     item: object
     open: (id) => void
+    eager: boolean
 
   view
     button press=open(item.id) label=item.name testId=`card-${item.id}` background="transparent" borderWidth=0 padding=0 width=240 minWidth=200 flex=1 align="stretch"
       column gap=0 width="100%" borderWidth=1 borderColor="#E5E5E5" background="#FFFFFF"
         stack width="100%" height=230 overflow="hidden" background="#F8F8F8"
-          image src=item.imageUrl alt=item.name width="100%" height="100%" objectFit="contain"
+          image src=item.imageUrl alt=item.name width="100%" height="100%" objectFit="contain" loading=eager ? "eager" : "lazy" priority=eager ? "high" : "auto"
           when item.badge != ""
             column position="absolute" top=10 left=10 paddingTop=4 paddingBottom=4 paddingLeft=8 paddingRight=8 background=item.badge == "Sale" ? "#D4281C" : "#ECF000"
               text item.badge size=10 weight=800 letterSpacing=1 color=item.badge == "Sale" ? "#FFFFFF" : "#003789"
@@ -282,7 +299,7 @@ component DetailScreen
       row gap=32 wrap="wrap" align="flex-start" width="100%"
         column gap=10 flex=1 minWidth=340
           stack width="100%" height=460 overflow="hidden" background="#F8F8F8" testId="detail-image"
-            image src=mainImageUrl(productId, colorCode, mainUrl) alt=product.name width="100%" height="100%" objectFit="contain"
+            image src=mainImageUrl(productId, colorCode, mainUrl) alt=product.name width="100%" height="100%" objectFit="contain" loading="eager" priority="high"
           row gap=8 wrap="wrap"
             each img in gallery key=img.url
               button press=pickImage(img.url) label="View angle" background="#F8F8F8" borderWidth=1.5 borderColor=img.url == mainUrl ? "#0E131F" : "#E5E5E5" padding=2

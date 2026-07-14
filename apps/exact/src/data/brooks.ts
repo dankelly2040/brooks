@@ -190,6 +190,20 @@ export function gridFor(categoryId: string, query: string): readonly GridItem[] 
   return base.filter((item) => item.searchKey.includes(q));
 }
 
+/**
+ * Bound the Contract browse surface without pretending the current wrapping
+ * grid is a virtualized list. Increasing `limit` exposes the next page while
+ * preserving the stable precomputed row objects.
+ */
+export function gridPage(items: readonly GridItem[], limit: number): readonly GridItem[] {
+  return items.slice(0, Math.max(0, Math.floor(limit)));
+}
+
+/** The widest desktop layout shows at most four cards in its first row. */
+export function gridItemIsFirstRow(items: readonly GridItem[], id: string): boolean {
+  return items.slice(0, 4).some((item) => item.id === id);
+}
+
 /* ------------------------------------------------------------ product page -- */
 
 const BY_ID: ReadonlyMap<string, Product> = new Map(CATALOG.products.map((p) => [p.id, p]));

@@ -5,6 +5,7 @@
 **Systems:** Exact App
 **Author:** Claude Fable 5
 **Date:** 2026-07-13
+**Revised:** 2026-07-14
 **Related:** LLP 0000, LLP 0002
 
 ## Summary
@@ -203,6 +204,21 @@ Corrections and confirmations to the sections above:
   real Brooks variant ids) and not a motion showcase. `memoRows("id")`,
   the sidecar ceremony, state-driven screens, and remote CDN images all
   behaved exactly as §"The four things" said they would.
+
+## Addendum, 2026-07-14: bounded image work
+
+[verified by compiling and data-level benchmark — ENG-24862] The wrapping
+Contract product grid is not virtualized: mounting a category previously
+created every card and image source at once (24–97 products across the eight
+categories). The app now pages that stable `memoRows("id")` collection in
+12-card increments. Initial source fan-out is therefore 12 for every category,
+and only the widest layout's first four cards are marked `loading="eager"`
+and `priority="high"`; the remaining grid cards are lazy/auto. The home hero
+and the selected product's main image are also explicit eager/high candidates.
+
+[inferred] This is a bounded interim policy, not a substitute for viewport-aware
+virtualization. It makes the current wrapping grid honest and measurable while
+the Exact list/virtualization path remains a separate framework capability.
 
 ## Recommended starting recipe
 

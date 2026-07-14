@@ -5,6 +5,7 @@
 **Systems:** Brooks, Shared, Expo App, Exact App, Data
 **Author:** Claude Fable 5
 **Date:** 2026-07-13
+**Revised:** 2026-07-14
 **Related:** LLP 0000, LLP 0003, LLP 0004
 
 ## Summary
@@ -45,7 +46,7 @@ phone:
 | Surface | Reachable from an app? | Use |
 |---|---|---|
 | `ac.cnstrc.com` (Constructor.io) | **Yes** — 200 to bare `curl` | Live search, autocomplete, browse, facets |
-| `brooksrunning.com/dw/image/v2/…` (image CDN) | **Yes** — 200 to bare `curl` | Live product photography, resized on demand |
+| `brooksrunning.com/dw/image/v2/…` (image CDN) | **Yes** when called with resize parameters | Live product photography, resized on demand |
 | `brooksrunning.com/on/demandware.store/…` (SFCC controllers) | **No** — 403 | Harvest via browser, snapshot to disk |
 | `brooksrunning.com/*.html` (PDP/PLP pages) | **No** — 403 | Harvest via browser |
 
@@ -221,6 +222,15 @@ colorway has 7 angles. `sw`/`sh` control size, `sm=fit|cut` the fit mode.
 [inferred] This is the biggest single lever on how fast the app feels: store bare
 URLs, size them at the call site, and a 170pt grid tile fetches a ~340px image
 instead of the 2500px master. Implemented in `packages/catalog/images.ts`.
+
+[observed — plain HTTP client, 2026-07-14] Reachability is specific to the
+resized request shape above. Some bare `/dw/image/v2/` master URLs and three
+otherwise-valid CMS article-hero URLs returned `200 text/html` denial pages.
+The apps therefore keep the catalog CDN keys but always add `sw`, `sh`, `sm`,
+and output-format parameters at the call site. Editorial sources are checked by
+`npm --prefix tools/harvest run validate:editorial`, which requires both an
+`image/*` content type and a recognized image signature; denied CMS story
+assets use related catalog photography from the resized public CDN.
 
 ## The harvested catalog
 

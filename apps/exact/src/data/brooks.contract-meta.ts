@@ -10,6 +10,8 @@ export default defineContractModule('./brooks.ts', {
   categoryLabel: pure({ params: ['id'], result: 'string', depends: 'args' }),
   sized: pure({ params: ['bareUrl', 'px'], result: 'string', depends: 'args' }),
   gridFor: pure({ params: ['categoryId', 'query'], result: 'GridItem[]', depends: 'args' }),
+  gridPage: pure({ params: ['items', 'limit'], result: 'GridItem[]', depends: 'args' }),
+  gridItemIsFirstRow: pure({ params: ['items', 'id'], result: 'boolean', depends: 'args' }),
   gridTop: pure({ params: ['categoryId'], result: 'GridItem[]', depends: 'args' }),
   getProduct: pure({ params: ['id'], result: 'Product', depends: 'args' }),
   colorwayOf: pure({ params: ['productId', 'colorCode'], result: 'Colorway', depends: 'args' }),

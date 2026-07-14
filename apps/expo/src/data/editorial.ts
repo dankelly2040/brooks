@@ -8,8 +8,6 @@
  * a static banner. It expires on its own, correctly, the way the real campaign does.
  */
 
-const CMS = 'https://www.brooksrunning.com/on/demandware.static/-/Sites/default';
-
 export const HERO = {
   eyebrow: 'Josh Kerr attempts mile world record',
   title: 'Project 222',
@@ -17,7 +15,8 @@ export const HERO = {
   cta: "Shop Kerr's training gear",
   ctaCategory: 'featured-best-sellers',
   /** Portrait still pulled from the hero's ambient video loop. */
-  image: `${CMS}/dw06ee0bb5/cms-content/Project/Brooks-Running/Homepage/2026/July/Josh-Kerr-Hero/S26_Video_Project222_JoshKerr_Hero_15s_Ambient_750x1200_v2mp400_00_02_06Still001.jpg`,
+  image:
+    'https://www.brooksrunning.com/on/demandware.static/-/Sites/default/dw06ee0bb5/cms-content/Project/Brooks-Running/Homepage/2026/July/Josh-Kerr-Hero/S26_Video_Project222_JoshKerr_Hero_15s_Ambient_750x1200_v2mp400_00_02_06Still001.jpg',
   /** The moment the attempt goes off, London. Drives the countdown. */
   attemptAt: Date.UTC(2026, 6, 18, 19, 0, 0),
 } as const;
@@ -28,7 +27,10 @@ export const STORIES = [
     eyebrow: 'Gear',
     title: 'The evolution of the Ghost',
     readTime: '4 min. read',
-    image: `${CMS}/dwaf8f6f56/cms-content/Project/Brooks-Running/Blog/2026/Spring-2026/ghost-evolution/Mobile_Ghost_18_Hero.jpg`,
+    // The CMS article hero returns an Akamai HTML denial to app clients. Use
+    // the open Brooks image CDN's Ghost catalog photography instead.
+    image:
+      'https://www.brooksrunning.com/dw/image/v2/BGPF_PRD/on/demandware.static/-/Sites-brooks-master-catalog/default/dwe6b5d0cf/original/110442/110442-112-l-ghost-17-mens-neutral-cushion-running-shoe.jpg',
     /** Editorial that lands on merchandise — the whole point of the home feed. */
     shopFranchise: 'Ghost',
     shopLabel: 'Shop the Ghost',
@@ -38,7 +40,8 @@ export const STORIES = [
     eyebrow: 'Shoe advice',
     title: 'Which Ghost is right for you?',
     readTime: '6 min. read',
-    image: `${CMS}/dwe4eadf00/cms-content/Project/Brooks-Running/Blog/2026/Spring-2026/best-ghost-for-you/Mobile_Ghost_Se.jpg`,
+    image:
+      'https://www.brooksrunning.com/dw/image/v2/BGPF_PRD/on/demandware.static/-/Sites-brooks-master-catalog/default/dw6186ec04/original/120431/120431-458-l-ghost-17-womens-neutral-cushion-running-shoe.jpg',
     shopFranchise: 'Ghost',
     shopLabel: 'Compare the Ghosts',
   },
@@ -47,7 +50,8 @@ export const STORIES = [
     eyebrow: 'Trail',
     title: 'Trail running tips for beginners',
     readTime: '5 min. read',
-    image: `${CMS}/dw79da2509/cms-content/Project/Brooks-Running/Blog/2025/Winter-2025/trail-running-tips/S25-BRcom-trail.jpg`,
+    image:
+      'https://www.brooksrunning.com/dw/image/v2/BGPF_PRD/on/demandware.static/-/Sites-brooks-master-catalog/default/dwaacb7c84/original/120446/120446-812-l-cascadia-19-womens-mountain-trail-trail-running-shoe.jpg',
     shopCategory: 'featured-trail-running-collection',
     shopLabel: 'Shop trail',
   },
