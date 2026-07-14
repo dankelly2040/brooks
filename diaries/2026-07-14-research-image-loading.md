@@ -128,3 +128,38 @@ residency/media-ledger measurement or second-view/second-launch result yet.
 user-visible scheduling, decode-residency, and relaunch effects remain unproven.
 Keep ENG-24942 open until browser and current native hosts can supply those
 platform-specific columns.
+
+## Addendum: current native-host retry
+
+**Captured:** 2026-07-14 15:35–15:42 UTC
+
+**Brooks commit:** `c64001bee559345bd34cfd165507de5088fcc9fa`
+
+**Exact commit:** `4ee5a29a38f531b8aa1da1de003c6ae722a301c1`
+
+[observed] A clean current `ExactAppMac` build completed successfully after a
+temporary, uncommitted compiler-discovery wrapper drained Xcode's oversized
+`clang -dM` probe. The wrapper delegated all real compiler invocations to the
+standard Apple clang; Xcode completed Swift compilation, linking, signing, and
+validation with `** BUILD SUCCEEDED **`. This narrows the earlier
+`CreateBuildDescription` stall to Xcode build-service discovery rather than an
+Exact source failure.
+
+[observed] The resulting app connected to the isolated Brooks server, downloaded
+the 195-module native envelope, and then correctly failed closed before JavaScript
+evaluation. Its live host status reported the missing signed
+`exact-armed-snapshot.json`; the packaged `armed-runtime/README.md` confirms that
+current Ibex advertises no executable Exact target and forbids copying example or
+ad-hoc snapshots into production.
+
+[confirmed by Linear state] Native field evidence is therefore gated by
+ENG-24933 (Ibex Exact target advertisement, authenticated artifacts, and typed
+ingress), which blocks ENG-24927 (Exact Apple/Windows armed-runtime migration).
+ENG-24942 should carry ENG-24927 as a blocker. Bypassing this gate with an old
+runtime or example snapshot would invalidate the current-commit field result and
+weaken a deliberate security boundary.
+
+[blocked] The native media ledger, decoded-residency high-water mark, and
+second-view/second-launch measurements remain unavailable until that runtime gate
+lands. The browser retry also found no attached in-app Browser target, so the web
+waterfall remains pending independently.
