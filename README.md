@@ -1,20 +1,17 @@
-# Brooks Mobile Commerce Prototype
+# Brooks Mobile App Prototype
 
 Brooks is an exploration of what a best-in-class native shopping experience for
 Brooks Running could feel like.
 
-The repository will contain two apps:
+The repository will contain one app:
 
 - **Expo app:** the primary deliverable—an exceptionally polished iOS and
   Android experience targeting Expo SDK 57 and Expo Go, with web support where
   practical.
-- **Exact app:** an experimental companion implementation used to push Exact's
-  current capabilities and document what works, what is difficult, and what
-  should improve.
 
 ## Current state (2026-07-13)
 
-Research is **done**. Both apps are **built and verified**.
+Research is **done**. The app is **built and verified**.
 
 | | State |
 |---|---|
