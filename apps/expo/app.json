@@ -37,6 +37,13 @@
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0E131F"
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "365039ba-4902-48f8-8fae-d545988067f3"
+      }
+    },
+    "owner": "dannymanning"
   }
 }
